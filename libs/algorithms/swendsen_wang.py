@@ -16,7 +16,7 @@ def construct_graph(model: PottsModel, temperature: float) -> PyGraph:
     neighbors = np.asarray(model.linked_info)
     delta_for_each_link = model.S[neighbors[:, 0]] == model.S[neighbors[:, 1]]
     edge_prob = np.where(delta_for_each_link, 1 - np.exp(-1/temperature), 0.0)
-    is_edge_present = np.random.rand(edge_prob.shape) < edge_prob
+    is_edge_present = np.random.rand(*edge_prob.shape) < edge_prob
 
     graph = PyGraph(multigraph=False)
     graph.add_nodes_from(model.I)
@@ -26,7 +26,7 @@ def construct_graph(model: PottsModel, temperature: float) -> PyGraph:
 
 def resample_(model: PottsModel, ccs: List[set[int]]) -> np.ndarray:
     for cc in ccs:
-        model.S[cc] = np.random.randint(0, model.q)
+        model.S[list(cc)] = np.random.randint(0, model.q)
 
 
 def run_swendsen_wang(model: PottsModel, temperature: float, iters: int, save_period: int) -> List[np.ndarray]:
