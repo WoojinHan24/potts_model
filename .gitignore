@@ -1,0 +1,7 @@
+#Not necessary files
+**/__pycache__/**
+**/**.pyc
+
+
+#private files
+.venv
