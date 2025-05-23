@@ -43,7 +43,6 @@ def run_swendsen_wang(model: PottsModel, temperature: float, iters: int, save_pe
         resample_(model, ccs)
         if i % save_period == 0:
             ret.append(model.S)
-            print(i)
         if energy_log_period > 0 and i % energy_log_period == 0:
             energy_log.append(model.Hamiltonian_2d_lattice_pbc())
     return SwendsenWangResult(ret, energy_log)
