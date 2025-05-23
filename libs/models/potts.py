@@ -1,4 +1,5 @@
 import numpy as np
+from logging import debug
 
 
 class PottsModel:
@@ -31,6 +32,10 @@ class PottsModel:
 
     def Hamiltonian(self) -> float:  # for general Hamiltonian calculations
         energy = 0.0
+        debug(f"indicies set {len(self.I)}, with len {len(self.S)}")
+        debug(
+            f"while max idx in linked_info = {max(max(a, b) for a, b in self.linked_info)}"
+        )
         for i, j in self.linked_info:
             si, sj = self.S[i], self.S[j]
             energy += self.J(si, sj)
