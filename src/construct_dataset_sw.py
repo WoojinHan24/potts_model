@@ -38,7 +38,7 @@ def main():
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
     
-    iters, save_period, energy_log_period = 4000, 2000, 100
+    thermalization_iters, num_samples, iter_per_sample, energy_log_period = 100000, 50000, 2000, 100
 
     L_range = [10, 20, 40, 80, 120]
     q_range = [2, 3, 4, 5, 10]
@@ -61,7 +61,7 @@ def main():
                     neighbors=neighbors,
                     interaction=lambda s1, s2: ferro_J(s1, s2, q),
                 )
-                samples, energy_log = run_swendsen_wang(model, T, iters, save_period, energy_log_period)
+                samples, energy_log = run_swendsen_wang(model, T, thermalization_iters, num_samples, iter_per_sample, energy_log_period)
                 
                 output_path = output_dir / f"t={T}.npz"
                 np.savez_compressed(output_path, allow_pickle=False, samples=np.stack(samples, axis=0), energy_log=energy_log)

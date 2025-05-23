@@ -35,13 +35,13 @@ def resample_(model: PottsModel, ccs: List[set[int]]) -> np.ndarray:
         model.S[list(cc)] = np.random.randint(0, model.q)
 
 
-def run_swendsen_wang(model: PottsModel, temperature: float, iters: int, save_period: int, energy_log_period: int) -> SwendsenWangResult:
+def run_swendsen_wang(model: PottsModel, temperature: float, thermalization_iters: int, num_samples: int, iter_per_sample: int, energy_log_period: int) -> SwendsenWangResult:
     ret, energy_log = [], []
-    for i in range(1, iters + 1):
+    for i in range(-thermalization_iters, num_samples * iter_per_sample + 1):
         graph = construct_graph(model, temperature)
         ccs = connected_components(graph)
         resample_(model, ccs)
-        if i % save_period == 0:
+        if i >= 0 and i % iter_per_sample == 0:
             ret.append(model.S)
         if energy_log_period > 0 and i % energy_log_period == 0:
             energy_log.append(model.Hamiltonian_2d_lattice_pbc())
