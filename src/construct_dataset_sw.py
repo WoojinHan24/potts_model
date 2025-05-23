@@ -1,3 +1,9 @@
+"""
+Usage: for q in 2 3 4 5 10; do; python src/construct_dataset_sw.py $q; done
+"""
+
+
+from argparse import ArgumentParser
 from functools import partial
 import logging
 from pathlib import Path
@@ -29,6 +35,10 @@ def ferro_J(s1, s2, J0=1.0):
 
 
 def main():
+    parser = ArgumentParser()
+    parser.add_argument("q", type=int)
+    args = parser.parse_args()
+
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
@@ -41,7 +51,8 @@ def main():
     thermalization_iters, num_samples, iter_per_sample, energy_log_period = 100000, 50000, 2000, 100
 
     L_range = [10, 20, 40, 80, 120]
-    q_range = [2, 3, 4, 5, 10]
+    # q_range = [2, 3, 4, 5, 10]
+    q_range = [args.q]
     T_range = [0.4, 0.5] + [i / 100 for i in range(60, 120)] + [1.2, 1.4]
     # T_range = [0.4, 0.8, 1.0, 1.5]
     for L in L_range:
