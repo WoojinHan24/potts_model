@@ -1,5 +1,5 @@
 """
-Usage: for q in 2 3 4 5 10; do; python src/construct_dataset_sw.py $q; done
+Usage: for q in 2 3 4 5 10; do; python src/construct_dataset_sw.py $q &; done
 """
 
 
