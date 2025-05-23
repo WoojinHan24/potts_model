@@ -3,10 +3,16 @@ Implements Swendsen-Algorithm for delta Potts model
 See https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.58.86
 """
 
+from collections import namedtuple
 from typing import List
 import numpy as np
 from rustworkx import PyGraph, connected_components
 from libs.models.potts_model import PottsModel
+
+
+SwendsenWangResult = namedtuple("SwendsenWangResult", [
+    "sampled_states", "energy_log"
+])
 
 
 def construct_graph(model: PottsModel, temperature: float) -> PyGraph:
@@ -29,12 +35,15 @@ def resample_(model: PottsModel, ccs: List[set[int]]) -> np.ndarray:
         model.S[list(cc)] = np.random.randint(0, model.q)
 
 
-def run_swendsen_wang(model: PottsModel, temperature: float, iters: int, save_period: int) -> List[np.ndarray]:
-    ret = []
+def run_swendsen_wang(model: PottsModel, temperature: float, iters: int, save_period: int, energy_log_period: int) -> SwendsenWangResult:
+    ret, energy_log = [], []
     for i in range(1, iters + 1):
         graph = construct_graph(model, temperature)
         ccs = connected_components(graph)
         resample_(model, ccs)
         if i % save_period == 0:
             ret.append(model.S)
-    return ret
+            print(i)
+        if energy_log_period > 0 and i % energy_log_period == 0:
+            energy_log.append(model.Hamiltonian_2d_lattice_pbc())
+    return SwendsenWangResult(ret, energy_log)
