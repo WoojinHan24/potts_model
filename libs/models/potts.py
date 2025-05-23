@@ -9,6 +9,7 @@ class PottsModel:
         index_to_position_map,
         neighbors,
         interaction,
+        S,
         field=lambda s: 0.0,
     ):
         """
@@ -17,6 +18,7 @@ class PottsModel:
         index_to_position_map : f(i) --> index to position function
         neighbors : [list of (i,j)] inform i,j are linked
         interaction : J(s1,s2) = s1 s2 interaction, function
+        S : Spin configuration of the index_set.
         field : h(s1) = h, s1 magnetic field, function setting
         """
         self.q = q
@@ -25,11 +27,9 @@ class PottsModel:
         self.linked_info = neighbors
         self.J = interaction
         self.h = field
-        self.S = np.random.randint(
-            0, q, size=len(self.I)
-        )  # keep this out smdy? monte carlo seperation
+        self.S = S
 
-    def Hamiltonian(self) -> float:
+    def Hamiltonian(self) -> float:  # for general Hamiltonian calculations
         energy = 0.0
         for i, j in self.linked_info:
             si, sj = self.S[i], self.S[j]
@@ -37,18 +37,6 @@ class PottsModel:
         for i in self.I:
             energy += self.h(self.S[i])
         return energy
-
-    def Hamiltonian_2d_lattice_pbc(self) -> float:
-        """
-        assumes this is 2d square lattice with periodic boundary condition
-        TODO: make this separate class, possibly inheriting PottsModel
-        """
-        L = int(np.sqrt(len(self.I)))
-        S_2d = self.S.reshape(L, L)
-        J_term_vertical = np.sum(self.J(S_2d, np.roll(S_2d, 1, axis=0)))
-        J_term_horizontal = np.sum(self.J(S_2d, np.roll(S_2d, 1, axis=1)))
-        h_term = np.sum(self.h(self.S))
-        return J_term_vertical + J_term_horizontal + h_term
 
     def Hamiltonian_respecting_interactions(self) -> float:
         """
@@ -71,3 +59,34 @@ class PottsModel:
 
     def position(self, i: int):
         return self.f(i)
+
+    @classmethod
+    def Generate_Monte_Carlo(
+        cls,
+        M,
+        rng,
+        q,
+        index_set,
+        index_to_position_map,
+        neighbors,
+        interaction,
+        field=lambda s: 0.0,
+    ):
+        """
+        Generate M random PottsModel configurations using same structure.
+        This inputs rng for reproductible results.
+        """
+        models = []
+        for _ in range(M):
+            spin_config = rng.integers(0, q, size=len(index_set))
+            model = cls(
+                q,
+                index_set,
+                index_to_position_map,
+                neighbors,
+                interaction,
+                field=field,
+                S=spin_config,
+            )
+            models.append(model)
+        return models
