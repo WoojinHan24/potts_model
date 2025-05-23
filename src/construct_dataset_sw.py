@@ -38,12 +38,12 @@ def main():
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
     
-    iters, save_period, energy_log_period = 2000, 2000, 100
+    iters, save_period, energy_log_period = 4000, 2000, 100
 
     L_range = [10, 20, 40, 80, 120]
     q_range = [2, 3, 4, 5, 10]
-    T_range = [0.1, 0.2, 0.5, 0.8, 0.85, 0.9, 0.95, 1.0, 1.5, 2.0]
-
+    T_range = [0.4, 0.5] + [i / 100 for i in range(60, 120)] + [1.2, 1.4]
+    # T_range = [0.4, 0.8, 1.0, 1.5]
     for L in L_range:
         I = list(range(L * L))
         neighbors = periodic_neighbors(L, L)
@@ -52,6 +52,7 @@ def main():
             plt.figure()
             output_dir = output_root / f"delta__swendsen_wang__q={q}__L={L}"
             output_dir.mkdir(exist_ok=True)
+            mean_energy, std_energy = [], []
             for T in T_range:
                 model = PottsModel(
                     q=q,
@@ -64,11 +65,12 @@ def main():
                 
                 output_path = output_dir / f"t={T}.npz"
                 np.savez_compressed(output_path, allow_pickle=False, samples=np.stack(samples, axis=0), energy_log=energy_log)
-                plt.plot(np.arange(energy_log_period, iters + 1, energy_log_period), energy_log, label=f"T={T}")
+                mean_energy.append(np.mean(energy_log))
+                std_energy.append(np.std(energy_log))
             
-            plt.xlabel("Step")
-            plt.ylabel("Energy")
-            plt.legend()
+            plt.xlabel("T")
+            plt.ylabel("Mean Energy")
+            plt.errorbar(T_range, mean_energy, std_energy)
             plt.savefig(log_dir / f"energy_plot_q={q}__L={L}.png")
 
 
