@@ -41,7 +41,7 @@ def run_swendsen_wang(model: PottsModel, temperature: float, thermalization_iter
         graph = construct_graph(model, temperature)
         ccs = connected_components(graph)
         resample_(model, ccs)
-        if i >= 0 and i % iter_per_sample == 0:
+        if i > 0 and i % iter_per_sample == 0:
             ret.append(model.S)
         if energy_log_period > 0 and i % energy_log_period == 0:
             energy_log.append(model.Hamiltonian_2d_lattice_pbc())
