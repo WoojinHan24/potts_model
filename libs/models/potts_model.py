@@ -26,7 +26,7 @@ class PottsModel:
         self.J = interaction
         self.h = field
         self.S = np.random.randint(
-            0, q, size=len(self.I)
+            0, q, size=len(self.I), dtype=np.uint8
         )  # keep this out smdy? monte carlo seperation
 
     def Hamiltonian(self) -> float:
