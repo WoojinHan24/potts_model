@@ -7,10 +7,10 @@ class ClassificationCNN(nn.Module):
         self.Q = Q
         # use circular padding to better account for PBC
         # the rest matches https://www.sciencedirect.com/science/article/abs/pii/S0003491618300459
-        self.conv_in = nn.Conv2d(Q, 1, 3, 1, 1, padding_mode="circular")
+        self.conv_in = nn.Conv2d(Q, Q, 3, 1, 1, padding_mode="circular")
         self.relu = nn.ReLU(inplace=True)
         self.pool = nn.AvgPool2d(2)
-        self.fc_out = nn.Linear(1 * (Lx // 2) * (Ly // 2), Q)
+        self.fc_out = nn.Linear(Q * (Lx // 2) * (Ly // 2), Q)
 
     def forward(self, x):
         # assume 4D input [N, Q, L, L]: 2D lattice batched in one-hot
