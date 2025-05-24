@@ -32,7 +32,7 @@ def construct_graph(model: PottsModel, temperature: float) -> PyGraph:
 
 def resample_(model: PottsModel, ccs: List[set[int]]) -> np.ndarray:
     for cc in ccs:
-        model.S[list(cc)] = np.random.randint(0, model.q)
+        model.S[list(cc)] = np.random.randint(0, model.q, dtype=np.uint8)
 
 
 def run_swendsen_wang(model: PottsModel, temperature: float, thermalization_iters: int, num_samples: int, iter_per_sample: int, energy_log_period: int) -> SwendsenWangResult:
@@ -42,7 +42,7 @@ def run_swendsen_wang(model: PottsModel, temperature: float, thermalization_iter
         ccs = connected_components(graph)
         resample_(model, ccs)
         if i > 0 and i % iter_per_sample == 0:
-            ret.append(model.S)
+            ret.append(model.S.copy())
         if energy_log_period > 0 and i % energy_log_period == 0:
             energy_log.append(model.Hamiltonian_2d_lattice_pbc())
     return SwendsenWangResult(ret, energy_log)
