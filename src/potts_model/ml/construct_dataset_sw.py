@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-from libs.algorithms.swendsen_wang import run_swendsen_wang
+from libs.simulation.swendsen_wang import run_swendsen_wang
 from libs.models.potts_model import PottsModel
 
 
