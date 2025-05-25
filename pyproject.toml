@@ -7,12 +7,25 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "numpy (>=2.2.5,<3.0.0)",
-    "scipy (>=1.15.3,<2.0.0)"
+packages = [
+    { include = "libs", from = "." }
 ]
 
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^2.2.6"
+logging = "^0.4.9.6"
+scipy = "^1.15.1"
+matplotlib = "^3.10.1"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[[tool.poetry.packages]]
+include = "potts_model"
+from = "src"
+
+[tool.poetry.scripts]
+dev = "potts_model.dev:main"
