@@ -9,7 +9,7 @@ from libs.ml.dataset import GroundStateDataset
 from libs.ml.modeling import ClassificationCNN
 
 
-Q = 2
+Q = 3
 L = 10
 data_repeat = 200
 epochs = 100000
@@ -93,7 +93,29 @@ with torch.inference_mode():
         mean_by_T[T] = v / v.sum(dim=1, keepdims=True)
 
 
-for t in sorted(mean_by_T.keys()):
+rs = []
+ts = sorted(mean_by_T.keys())
+for t in ts:
     v = mean_by_T[t]
-    plt.hist(torch.linalg.norm(v, ord=2, dim=1))
+    r = torch.linalg.norm(v, ord=2, dim=1)
+    plt.hist(r)
+    plt.show()
+    rs.append(r.mean())
+
+plt.plot(ts, rs)
+
+
+#%%
+with torch.inference_mode():
+    mag_by_T = {}
+    for path in sorted(data_dir.glob("*.npz")):
+        T = float(path.name.replace("t=", "").replace(".npz", ""))
+        samples = torch.from_numpy(np.load(path)["samples"])
+        samples_vec = torch.stack((torch.cos(samples), torch.sin(samples)), dim=2)
+        mag_vec = samples_vec.mean(dim=1)
+        mag = torch.linalg.norm(mag_vec, dim=1)
+        mag_by_T[T] = mag.numpy()
+
+for t in sorted(mag_by_T.keys()):
+    plt.hist(mag_by_T[t])
     plt.show()
