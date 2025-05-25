@@ -7,7 +7,7 @@ from collections import namedtuple
 from typing import List
 import numpy as np
 from rustworkx import PyGraph, connected_components
-from libs.models.potts_model import PottsModel
+from libs.models.potts import PottsModel
 
 
 SwendsenWangResult = namedtuple("SwendsenWangResult", [
