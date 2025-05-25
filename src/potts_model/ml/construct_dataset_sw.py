@@ -65,7 +65,7 @@ def main():
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
     
-    output_root = Path("debug_dataset")
+    output_root = Path("dataset/debug_dataset_v1")
     output_root.mkdir(exist_ok=True)
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
@@ -74,7 +74,8 @@ def main():
 
     q_range = [2, 3, 4]#, 5, 10]
     L_range = [10, 20, 40]#, 80, 120]
-    T_range = [0.4, 0.5] + [i / 100 for i in range(60, 120, 5)] + [1.2, 1.4]
+    T_range_past = set([0.4, 0.5] + [i / 100 for i in range(60, 120, 5)] + [1.2, 1.4])
+    T_range = sorted(set([i / 100 for i in range(60, 120, 1)]).difference(T_range_past))
     # T_range = [0.4, 0.8, 1.0, 1.5]
     args = [(q, L, T) for q in q_range for L in L_range for T in T_range]
     tasks = [delayed(run)(42, output_root, q, L, T, thermalization_iters, num_samples, iter_per_sample, energy_log_period) for q, L, T in args]

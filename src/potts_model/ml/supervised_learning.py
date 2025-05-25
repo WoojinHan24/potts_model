@@ -48,7 +48,7 @@ for epoch in range(1, epochs + 1):
         test_acc = (test_y_pred.argmax(dim=1) == test_y_gt).float().mean()
     print(f"[Epoch {epoch:03d}] train_loss {train_loss_avg:.4f} test_loss {test_loss_avg:.4f} test_acc {test_acc:.4f}")
 
-    if test_loss_avg < 0.01:
+    if test_loss_avg < 0.01:  # early stopping; otherwise the model becomes "overconfident", producing useless results
         break
 
 #%%
@@ -106,6 +106,7 @@ plt.plot(ts, rs)
 
 
 #%%
+
 with torch.inference_mode():
     mag_by_T = {}
     for path in sorted(data_dir.glob("*.npz")):
