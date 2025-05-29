@@ -11,29 +11,32 @@ def dev():
     J0 = 1.0
     A = get_initial_A(q, J0, J_fn)
 
-    N_keep = 100
+    N_keep = 16
     for _ in range(3):
-        T = get_T(A, N_keep)
+        # These names follow https://tensornetwork.org/trg/
+        F1, F3 = get_T(A, N_keep)
+        F2, F4 = get_T(A.transpose(0, 3, 2, 1), N_keep)
         # TT = A check
-        TT = np.einsum(f"ijk,lmk->ijlm", T, T)
-        print(f"TT-A = {print_mat(TT-A)}")
+        # TT = np.einsum(f"ijk,lmk->ijlm", T, T)
+        # print(f"TT-A = {compare_mat(TT, A)}")
+        
+        # M = np.einsum("ija,jkb->ikab", T, T2)
+        # A = np.einsum("ikab,kicd->abcd", M, M)
+        # A = symmetrize(A)
 
-        A = np.einsum("ija,kjb,klc,lid->abcd", T, T, T, T)
-        A = symmetrize(A)
+        A = np.einsum("ija,kjb,klc,ild->abcd", F1, F4, F3, F2)
 
-    # A reflection check
-    # print(f"A_ijkl - A_jikl = {print_mat(A-A.transpose(0,2,1,3))}")
-    # T[i,j,k] = T[j,i,k] check
-    # print(f"T_ijk - T_jik = {print_mat(T - T.transpose(1,0,2))}")
-    # TT = A check
-    # TT = np.einsum(f"ijk,lmk->ijlm", T, T)
-    # print(f"TT-A = {print_mat(TT-A)}")
-    # reflection symmetry ok
-    # print(f"A_ijkl - A_jilk = {print_mat(A_new-A_new.transpose(1,0,3,2))}")
-    # rotation symmetry ok
-    # print(f"A_ijkl - A_jkli = {print_mat(A_new-A_new.transpose(1,2,3,0))}")
-    # TODO but no exchanges
-    # print(f"A_ijkl - A_jikl = {print_mat(A_new-A_new.transpose(1,0,2,3))}")
+        # T symmetry check
+        # print(f"T_ijk - T_jik", compare_mat(T, T.transpose(1, 0, 2)))
+        # print(f"T2_ijk - T2_jik", compare_mat(T2, T2.transpose(1, 0, 2)))
+
+        # Do we need symmetry?
+        # reflection symmetry ok
+        print(f"A_ijkl - A_jilk = {print_mat(A-A.transpose(1,0,3,2))}")
+        # rotation symmetry ok
+        print(f"A_ijkl - A_jkli = {print_mat(A-A.transpose(1,2,3,0))}")
+        # TODO but no exchanges
+        print(f"A_ijkl - A_jikl = {print_mat(A-A.transpose(1,0,2,3))}")
 
 
 def symmetrize(A):
@@ -55,6 +58,13 @@ def symmetrize(A):
 
 def print_mat(A):
     return np.min(A), np.max(A)
+
+
+def compare_mat(A, B):
+    absdiff = np.max(np.abs(A - B)).item()
+    maxrel = absdiff / max(np.max(np.abs(A)).item(), np.max(np.abs(B)).item())
+    meanrel = absdiff / ((np.mean(np.abs(A)).item() + np.mean(np.abs(B)).item()) / 2)
+    return f"abs {absdiff} maxrel {maxrel} meanrel {meanrel}"
 
 
 def get_initial_A(q, J0, J_fn):
@@ -108,10 +118,12 @@ def get_T(A, N_keep):
     # print(f"U-Vh^dagger = {U - Vh.conj().T}")
 
     # T T^dagger = A, T [q,q,q]
-    T = (0.5 * (U + Vh.conj().T)).reshape(q, q, N)
+    # T = (0.5 * (U + Vh.conj().T)).reshape(q, q, N)
 
     # check whether TTd == A
     # TTd = np.einsum("ijk,klm->ijlm", T, T.conj().T)
     # print(f"TTd - A = {np.min(TTd-A)}, {np.max(TTd-A)}")
+    UVh = (U @ Vh).reshape(q, q, q, q)
+    print(f"UVh - A = {np.min(UVh-A)}, {np.max(UVh-A)}")
 
-    return T
+    return U.reshape(q, q, N), Vh.conj().T.reshape(q, q, N)
