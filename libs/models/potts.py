@@ -95,3 +95,27 @@ class PottsModel:
             )
             models.append(model)
         return models
+
+
+def idx_to_pos(i, Lx, Ly):
+    return (i // Lx, i % Lx)
+
+
+def periodic_neighbors(Lx, Ly):
+    neighbors = []
+    for x in range(Lx):
+        for y in range(Ly):
+            i = x * Ly + y
+            right = x * Ly + (y + 1) % Ly
+            down = ((x + 1) % Lx) * Ly + y
+            neighbors.append((i, right))
+            neighbors.append((i, down))
+    return neighbors
+
+
+def ferro_J(s1, s2, J0=1.0):
+    return np.where(s1 == s2, -J0, 0.0)
+
+
+def clock_J(s1, s2, q, J0=1.0):
+    return -J0 * np.cos(2 * np.pi * (s1 - s2) / q)
