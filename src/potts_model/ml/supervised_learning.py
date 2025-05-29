@@ -11,11 +11,14 @@ from libs.ml.modeling import ClassificationCNN
 
 
 def train_model_on_ordered_set(Q, L):
+    torch.manual_seed(42)
+
     data_repeat = 200
     epochs = 100000
     batch_size = 64
     learning_rate = 1e-2
-    weight_decay = 1e-2
+    # learning_rate_decayed = 1e-3
+    weight_decay = 0.1
 
     train_set = GroundStateDataset(Q, L, L, data_repeat)
     test_set = GroundStateDataset(Q, L, L, 1)
@@ -48,7 +51,10 @@ def train_model_on_ordered_set(Q, L):
             test_acc = (test_y_pred.argmax(dim=1) == test_y_gt).float().mean()
         print(f"[Epoch {epoch:03d}] train_loss {train_loss_avg:.4f} test_loss {test_loss_avg:.4f} test_acc {test_acc:.4f}")
 
-        if test_loss_avg < 0.1:  # early stopping; otherwise the model becomes "overconfident", producing useless results
+        # if test_loss_avg < 0.2:  # early stopping; otherwise the model becomes "overconfident", producing useless results
+        #     optimizer.param_groups[0]["lr"] = learning_rate_decayed
+
+        if test_loss_avg < 0.01:  # early stopping; otherwise the model becomes "overconfident", producing useless results
             break
     return model
 
