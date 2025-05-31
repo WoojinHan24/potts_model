@@ -11,6 +11,47 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
+from scipy.optimize import curve_fit
+
+
+def extract_Tc_half_m(q: int, L_values: list[int], out_root: Path = Path("logs/unsupervised_learning")):
+    L_inv = []
+    Tc_L = []
+    for L in L_values:
+        conf_name = f"delta__swendsen_wang__q={q}__L={L}"
+        out_dir = out_root / conf_name
+        df = pd.read_csv(out_dir / "order_parameter.csv").sort_values("T")
+        ms = df["mean_centroid_norm"] / L
+        ts = df["T"].values
+
+        idx = np.where(ms > 0.5)[0]
+        if len(idx) == 0 or idx[-1] + 1 >= len(ms):
+            continue
+        i = idx[-1]
+        # Linear interpolate between ms[i] and ms[i+1]
+        m0, m1 = ms[i], ms[i + 1]
+        t0, t1 = ts[i], ts[i + 1]
+        Tc_interp = t0 + (0.5 - m0) * (t1 - t0) / (m1 - m0)
+        L_inv.append(1 / L)
+        Tc_L.append(Tc_interp)
+
+    plt.figure(figsize=(7, 5))
+    plt.scatter(L_inv, Tc_L, label="Extracted $T_c(L)$", color="black")
+
+    def power_law(x, a, b, c):
+        return a * x ** b + c
+
+    popt, _ = curve_fit(power_law, L_inv, Tc_L, p0=(1.0, 1.0, 1.0))
+    x_fit = np.linspace(0, max(L_inv), 100)
+    y_fit = power_law(x_fit, *popt)
+    plt.plot(x_fit, y_fit, "r--", label=f"Power-law fit: {popt[0]:.3f}x^{popt[1]:.3f} + {popt[2]:.3f}")
+
+    plt.xlabel("$1/L$")
+    plt.ylabel("$T_c(L)$")
+    plt.title(f"Scaling of predicted $T_c$ — q={q}")
+    plt.legend()
+    plt.savefig(out_root / f"Tc_scaling_q{q}.png", dpi=200)
+    plt.close()
 
 
 def _load_all_samples(data_dir: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -122,6 +163,9 @@ def main() -> None:
 
     for q in (2, 3, 4):
         plot_finite_size_effects(q, [10, 20, 40])
+
+    for q in (2, 3, 4):
+        extract_Tc_half_m(q, [10, 20, 40])
 
 
 if __name__ == "__main__":
