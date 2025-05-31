@@ -94,10 +94,34 @@ def analyze_configuration_set(
     plt.close(fig)
 
 
+def plot_finite_size_effects(q: int, L_values: list[int], out_root: Path = Path("logs/unsupervised_learning")):
+    plt.figure(figsize=(7, 5))
+    for L in L_values:
+        conf_name = f"delta__swendsen_wang__q={q}__L={L}"
+        out_dir = out_root / conf_name
+        df = pd.read_csv(out_dir / "order_parameter.csv")
+        plt.plot(df["T"], df["mean_centroid_norm"] / L, marker="o", label=f"L={L}")
+    # Add theoretical critical temperatures
+    if q == 3:
+        plt.axvline(0.9950, color="black", linestyle="dotted")
+    elif q == 4:
+        plt.axvline(0.9102, color="black", linestyle="dotted")
+    plt.xlabel("Temperature  T/J")
+    plt.ylabel("$\\langle m \\rangle / L$")
+    plt.title(f"PCA + k-means order parameter — q={q}")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(out_root / f"finite_size_comparison_q{q}.png", dpi=200)
+    plt.close()
+
+
 def main() -> None:
     for q in (2, 3, 4):
         for L in (10, 20, 40):
             analyze_configuration_set(q, L)
+
+    for q in (2, 3, 4):
+        plot_finite_size_effects(q, [10, 20, 40])
 
 
 if __name__ == "__main__":
