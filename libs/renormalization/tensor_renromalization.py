@@ -49,20 +49,20 @@ class TRG_Results:
 
 
 def symmetrize(A):
-    symmetrized_A_sum = np.zeros_like(A, dtype=np.float64)
+    # Hardcoded for rank 4
+    assert len(A.shape) == 4, "This method only supports rank-4 tensor"
 
-    num_axes = A.ndim
-    axes_indices = list(range(num_axes))  # [0, 1, 2, 3]
+    # Exploit repeated permutations for optimization
+    A = (A + A.transpose(0, 1, 3, 2) + A.transpose(0, 2, 1, 3)) / 3
+    A = (A + A.transpose(0, 3, 2, 1)) / 2
+    # So far, the above covers all permutations that keep rank 0 intact
 
-    num_permutations = 0
-    for p in itertools.permutations(axes_indices):
-        symmetrized_A_sum += A.transpose(p)
-        num_permutations += 1
+    # Now enforce shifting permutations:
+    A = (A + A.transpose(1, 2, 3, 0)) / 2
+    A = (A + A.transpose(2, 3, 0, 1)) / 2
 
-    if num_permutations == 0:
-        return symmetrized_A_sum
+    return A
 
-    return symmetrized_A_sum / num_permutations
 
 
 def print_mat(A):
@@ -135,6 +135,11 @@ def get_T(A, N_keep):
 
 
 def get_A(T):
-    A = np.einsum("ija,kjb,klc,lid->abcd", T, T, T, T)
+    # What we want to do:
+    # A = np.einsum("ija,kjb,klc,lid->abcd", T, T, T, T)
+    A1 = np.einsum("ija,kjb->ikab", T, T)
+    A2 = np.einsum("klc,lid->kicd", T, T)
+    A = np.einsum("ikab,kicd->abcd", A1, A2)
+
     A = symmetrize(A)
     return A
