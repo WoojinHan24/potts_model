@@ -44,5 +44,5 @@ def run_swendsen_wang(model: PottsModel, temperature: float, thermalization_iter
         if i > 0 and i % iter_per_sample == 0:
             ret.append(model.S.copy())
         if energy_log_period > 0 and i % energy_log_period == 0:
-            energy_log.append(model.Hamiltonian_2d_lattice_pbc())
+            energy_log.append(model.Hamiltonian_respecting_interactions())
     return SwendsenWangResult(ret, energy_log)

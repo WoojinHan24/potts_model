@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from libs.simulation.swendsen_wang import run_swendsen_wang
-from libs.models.potts_model import PottsModel
+from libs.models.potts import PottsModel
 
 
 
@@ -45,13 +45,16 @@ def run(seed, output_root, q, L, T, thermalization_iters, num_samples, iter_per_
 
     output_dir = output_root / f"delta__swendsen_wang__q={q}__L={L}"
     output_dir.mkdir(exist_ok=True)
-    model = PottsModel(
+    rng = np.random.default_rng(seed=42)
+    model = PottsModel.Generate_Monte_Carlo(
+        M=1,
+        rng=rng,
         q=q,
         index_set=I,
         index_to_position_map=partial(idx_to_pos, L),
         neighbors=neighbors,
         interaction=ferro_J,
-    )
+    )[0]
     samples, energy_log = run_swendsen_wang(model, T, thermalization_iters, num_samples, iter_per_sample, energy_log_period)
     
     output_path = output_dir / f"t={T}.npz"
@@ -73,9 +76,9 @@ def main():
     thermalization_iters, num_samples, iter_per_sample, energy_log_period = 100000, 1000, 2000, 100
 
     q_range = [2, 3, 4]#, 5, 10]
-    L_range = [10, 20, 40]#, 80, 120]
+    L_range = [60, 80, 120]#[10, 20, 40,
     T_range_past = set([0.4, 0.5] + [i / 100 for i in range(60, 120, 5)] + [1.2, 1.4])
-    T_range = sorted(set([i / 100 for i in range(60, 120, 1)]).difference(T_range_past))
+    T_range = sorted(set([i / 100 for i in range(60, 120, 1)]).union(T_range_past))
     # T_range = [0.4, 0.8, 1.0, 1.5]
     args = [(q, L, T) for q in q_range for L in L_range for T in T_range]
     tasks = [delayed(run)(42, output_root, q, L, T, thermalization_iters, num_samples, iter_per_sample, energy_log_period) for q, L, T in args]
