@@ -120,53 +120,28 @@ def analyze_db(run_on, folder):
     ax.legend()
 
     if plotted_labels:
-        # --- 범례 처리 시작 ---
         num_lines = len(plotted_labels)
 
-        # 옵션 1: 범례를 그래프 오른쪽에 배치 (여러 열 사용 가능)
-        # ncol은 범례 항목 수에 따라 적절히 조절 (예: 1, 2, 또는 3)
-        # bbox_to_anchor의 x값을 조절하여 그래프와의 간격 설정 (1.02는 그래프 바로 오른쪽)
-        # fontsize를 조절하여 글자 크기 변경
-        legend_ncol = 1  # 항목이 매우 많으면 2 이상으로 변경 가능
-        if num_lines > 10:  # 예시: 10줄이 넘어가면 2열로
+        legend_ncol = 1
+        if num_lines > 10:
             legend_ncol = 2
 
         lgd = ax.legend(
-            loc="center left",  # 범례의 왼쪽 중앙을 기준점으로
+            loc="center left",
             bbox_to_anchor=(
                 1.02,
                 0.5,
-            ),  # 기준점을 그래프 영역의 (1.02, 0.5) 위치로 이동
+            ),
             ncol=legend_ncol,
-            fontsize="small",  # 또는 'x-small'
-            title="$T/T_c$ ($\\beta$)",  # 범례 제목 추가 (선택 사항)
+            fontsize="small",
+            title="$T/T_c$ ($\\beta$)",
         )
 
-        # 범례를 위한 공간 확보
-        # fig.tight_layout() 호출 전에 subplot 영역 조정
-        # right 값을 줄여서 오른쪽 여백을 만듭니다. (예: 0.75는 오른쪽 25%를 여백으로)
-        # 값은 범례의 너비에 따라 조절해야 합니다.
-        fig.subplots_adjust(
-            right=0.70 if legend_ncol == 2 else 0.75
-        )  # ncol에 따라 조절
-
-        # 옵션 2: 범례를 그래프 아래쪽에 배치 (여러 열 사용)
-        # legend_ncol_bottom = min(num_lines, 4) # 아래쪽에 넓게 배치할 경우 열 개수 늘림
-        # lgd = ax.legend(
-        #     loc='upper center', # 범례의 위쪽 중앙을 기준점으로
-        #     bbox_to_anchor=(0.5, -0.15), # 기준점을 그래프 아래쪽으로 이동 (-0.15는 간격)
-        #     ncol=legend_ncol_bottom,
-        #     fontsize='small',
-        #     fancybox=True, # 테두리 스타일 (선택 사항)
-        #     shadow=True    # 그림자 스타일 (선택 사항)
-        # )
-        # fig.subplots_adjust(bottom=0.25) # 아래쪽 여백 확보 (ncol 수와 글자 크기에 따라 조절)
-
-        # --- 범례 처리 끝 ---
+        fig.subplots_adjust(right=0.70 if legend_ncol == 2 else 0.75)
 
     ax.grid(True, linestyle="--", alpha=0.7)
 
-    plt.tight_layout()  # Adjust layout to make sure everything fits
+    plt.tight_layout()
 
     return fig
 
