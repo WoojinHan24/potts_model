@@ -11,14 +11,14 @@ from libs.ml.modeling import ClassificationCNN
 
 
 def train_model_on_ordered_set(Q, L):
-    torch.manual_seed(42)
+    torch.manual_seed(2048)
 
     data_repeat = 200
     epochs = 100000
-    batch_size = 64
-    learning_rate = 1e-2
+    batch_size = 16
+    learning_rate = 0.001
     # learning_rate_decayed = 1e-3
-    weight_decay = 0.1
+    weight_decay = 2.0
 
     train_set = GroundStateDataset(Q, L, L, data_repeat)
     test_set = GroundStateDataset(Q, L, L, 1)
@@ -32,6 +32,8 @@ def train_model_on_ordered_set(Q, L):
     criterion = nn.CrossEntropyLoss()
     optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
+    train_losses = []
+
     for epoch in range(1, epochs + 1):
         model.train()
         train_loss_sum = 0.0
@@ -42,7 +44,8 @@ def train_model_on_ordered_set(Q, L):
             loss.backward()
             train_loss_sum += loss.item() * x.shape[0]
             optimizer.step()
-        
+            train_losses.append(loss.item())
+
         train_loss_avg = train_loss_sum / len(train_set)
         
         with torch.inference_mode():
@@ -51,12 +54,14 @@ def train_model_on_ordered_set(Q, L):
             test_acc = (test_y_pred.argmax(dim=1) == test_y_gt).float().mean()
         print(f"[Epoch {epoch:03d}] train_loss {train_loss_avg:.4f} test_loss {test_loss_avg:.4f} test_acc {test_acc:.4f}")
 
-        # if test_loss_avg < 0.2:  # early stopping; otherwise the model becomes "overconfident", producing useless results
+        # if test_loss_avg < 1.0:
         #     optimizer.param_groups[0]["lr"] = learning_rate_decayed
+
 
         if test_loss_avg < 0.01:  # early stopping; otherwise the model becomes "overconfident", producing useless results
             break
-    return model
+
+    return model, train_losses
 
 #%%
 
@@ -70,9 +75,12 @@ output_root = Path("logs/supervised_learning/images")
 output_root.mkdir(parents=True, exist_ok=True)
 
 
+all_train_losses = {}
+
 for Q in [2, 3, 4]:
     for L in [10, 20, 40]:
-        model = train_model_on_ordered_set(Q, L)
+        model, train_losses = train_model_on_ordered_set(Q, L)
+        all_train_losses[Q, L] = train_losses
 
         conf_name = f"delta__swendsen_wang__q={Q}__L={L}"
 
@@ -97,25 +105,51 @@ for Q in [2, 3, 4]:
                 mag_by_T[T] = mag.numpy()
 
         norm_by_T = {T: np.linalg.norm(p, axis=1, ord=2) for T, p in pred_by_T.items()} 
+        dist_output_dir = output_dir / "dist"
+        dist_output_dir.mkdir(exist_ok=True)
 
         rs, ms = [], []
         ts = sorted(norm_by_T.keys())
         for t in ts:
-            plt.figure()
-            plt.hist(norm_by_T[t])
-            plt.savefig(output_dir / f"norm_dist__t={t}.png")
+            try:
+                plt.figure()
+                plt.hist(norm_by_T[t])
+                plt.savefig(dist_output_dir / f"norm_dist__t={t}.png")
+            except:
+                pass
             rs.append(norm_by_T[t].mean().item())
 
-            plt.figure()
-            plt.hist(mag_by_T[t])
-            plt.savefig(output_dir / f"mag_dist__t={t}.png")
+            try:
+                plt.figure()
+                plt.hist(mag_by_T[t])
+                plt.savefig(dist_output_dir / f"mag_dist__t={t}.png")
+            except:
+                pass
             ms.append(mag_by_T[t].mean().item())
+
+            plt.close("all")
 
         plt.figure()
         plt.plot(ts, rs)
+        plt.xlabel("T")
+        plt.ylabel("R")
         plt.savefig(output_dir / f"norm_mean.png")
 
         plt.figure()
         plt.plot(ts, ms)
+        plt.xlabel("")
         plt.savefig(output_dir / f"mag_mean.png")
 
+        plt.close("all")
+
+for q in [2, 3, 4]:
+    plt.figure()
+    for (Q, L), train_losses in all_train_losses.items():
+        if Q != q:
+            continue
+        plt.plot(np.arange(1, len(train_losses) + 1), train_losses, label=f"q={Q}, L={L}")
+    plt.xlabel("Iter")
+    plt.ylabel("Train Loss")
+    plt.title(f"Training Curve, q={q}")
+    plt.legend()
+    plt.savefig(output_root / f"training_curve__q={q}.png")
