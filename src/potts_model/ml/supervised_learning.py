@@ -78,8 +78,11 @@ output_root.mkdir(parents=True, exist_ok=True)
 all_train_losses = {}
 all_norm_means = {}
 
-for Q in [2, 3, 4]:
-    for L in [10, 20, 40]:
+Q_range = [2, 3, 4, 5]
+L_range = [10, 20, 40]
+
+for Q in Q_range:
+    for L in L_range:
         model, train_losses = train_model_on_ordered_set(Q, L)
         all_train_losses[Q, L] = train_losses
 
@@ -151,7 +154,7 @@ for Q in [2, 3, 4]:
 
         plt.close("all")
 
-for q in [2, 3, 4]:
+for q in Q_range:
     plt.figure(figsize=(5, 4))
     for (Q, L), train_losses in all_train_losses.items():
         if Q != q:
@@ -163,9 +166,9 @@ for q in [2, 3, 4]:
     plt.legend()
     plt.savefig(output_root / f"training_curve__q={q}.png", dpi=200)
 
-Tc_values = {2: 1.134, 3: 0.995, 4: 0.910}
+Tc_values = {2: 1.134, 3: 0.995, 4: 0.910, 5: 0.851}
 
-for q in [2, 3, 4]:
+for q in Q_range:
     plt.figure(figsize=(5, 4))
     for (Q, L), (T, R) in all_norm_means.items():
         if Q != q:
@@ -173,7 +176,8 @@ for q in [2, 3, 4]:
         plt.plot(T, R, label=f"q={Q}, L={L}")
     plt.xlabel("T")
     plt.ylabel("R")
-    plt.axvline(Tc_values[q], color='black', linestyle=':', label=f"Tc={Tc_values[q]:.3f}")
+    if q in Tc_values:
+        plt.axvline(Tc_values[q], color='black', linestyle=':', label=f"Tc={Tc_values[q]:.3f}")
     plt.title(f"R, q={q}")
     plt.legend()
     plt.savefig(output_root / f"norm_mean__q={q}.png", dpi=200)

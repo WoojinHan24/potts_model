@@ -35,8 +35,8 @@ def extract_Tc_half_m(q: int, L_values: list[int], out_root: Path = Path("logs/u
         L_inv.append(1 / L)
         Tc_L.append(Tc_interp)
 
-    plt.figure(figsize=(7, 5))
-    plt.scatter(L_inv, Tc_L, label="Extracted $T_c(L)$", color="black")
+    plt.figure(figsize=(5, 4))
+    plt.scatter(L_inv, Tc_L, label="Extracted $T_c$", color="black")
 
     def power_law(x, a, b, c):
         return a * x ** b + c
@@ -47,7 +47,7 @@ def extract_Tc_half_m(q: int, L_values: list[int], out_root: Path = Path("logs/u
     plt.plot(x_fit, y_fit, "r--", label=f"Power-law fit: {popt[0]:.3f}x^{popt[1]:.3f} + {popt[2]:.3f}")
 
     plt.xlabel("$1/L$")
-    plt.ylabel("$T_c(L)$")
+    plt.ylabel("$T_c$")
     plt.title(f"Scaling of predicted $T_c$ — q={q}")
     plt.legend()
     plt.savefig(out_root / f"Tc_scaling_q{q}.png", dpi=200)
@@ -103,7 +103,8 @@ def analyze_configuration_set(
     sc = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=temps, cmap="viridis", s=4, alpha=0.6)
     plt.xlabel("$p_1$")
     plt.ylabel("$p_2$")
-    plt.colorbar(sc, label="Temperature  T/J")
+    plt.title(f"PCA Scatter Plot, q={q}, L={L}")
+    plt.colorbar(sc, label="T")
     plt.tight_layout()
     plt.savefig(scatter_png)
     plt.close(fig)
@@ -127,7 +128,7 @@ def analyze_configuration_set(
 
     plt.figure(figsize=(7, 5))
     plt.plot(Ts, ms, marker="o")
-    plt.xlabel("Temperature  T/J")
+    plt.xlabel("T")
     plt.ylabel("$\\langle m \\rangle$")
     plt.title(f"PCA + k-means order parameter — q={q}, L={L}")
     plt.tight_layout()
@@ -135,19 +136,20 @@ def analyze_configuration_set(
     plt.close(fig)
 
 
+Tc_values = {2: 1.134, 3: 0.995, 4: 0.910, 5: 0.851}
+
+
 def plot_finite_size_effects(q: int, L_values: list[int], out_root: Path = Path("logs/unsupervised_learning")):
-    plt.figure(figsize=(7, 5))
+    plt.figure(figsize=(5, 4))
     for L in L_values:
         conf_name = f"delta__swendsen_wang__q={q}__L={L}"
         out_dir = out_root / conf_name
         df = pd.read_csv(out_dir / "order_parameter.csv")
         plt.plot(df["T"], df["mean_centroid_norm"] / L, marker="o", label=f"L={L}")
-    # Add theoretical critical temperatures
-    if q == 3:
-        plt.axvline(0.9950, color="black", linestyle="dotted")
-    elif q == 4:
-        plt.axvline(0.9102, color="black", linestyle="dotted")
-    plt.xlabel("Temperature  T/J")
+        
+    if q in Tc_values:
+        plt.axvline(Tc_values[q], color='black', linestyle=':', label=f"Tc={Tc_values[q]:.3f}")
+    plt.xlabel("T")
     plt.ylabel("$\\langle m \\rangle / L$")
     plt.title(f"PCA + k-means order parameter — q={q}")
     plt.legend()
@@ -155,17 +157,19 @@ def plot_finite_size_effects(q: int, L_values: list[int], out_root: Path = Path(
     plt.savefig(out_root / f"finite_size_comparison_q{q}.png", dpi=200)
     plt.close()
 
+Q_range = [3, 4, 5]
+L_range = [10, 20, 30, 40]
 
 def main() -> None:
-    for q in (2, 3, 4):
-        for L in (10, 20, 40):
+    for q in Q_range:
+        for L in L_range:
             analyze_configuration_set(q, L)
 
-    for q in (2, 3, 4):
-        plot_finite_size_effects(q, [10, 20, 40])
+    for q in Q_range:
+        plot_finite_size_effects(q, L_range)
 
-    for q in (2, 3, 4):
-        extract_Tc_half_m(q, [10, 20, 40])
+    for q in Q_range:
+        extract_Tc_half_m(q, L_range)
 
 
 if __name__ == "__main__":
