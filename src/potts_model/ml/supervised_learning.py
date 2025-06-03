@@ -76,6 +76,7 @@ output_root.mkdir(parents=True, exist_ok=True)
 
 
 all_train_losses = {}
+all_norm_means = {}
 
 for Q in [2, 3, 4]:
     for L in [10, 20, 40]:
@@ -112,38 +113,46 @@ for Q in [2, 3, 4]:
         ts = sorted(norm_by_T.keys())
         for t in ts:
             try:
-                plt.figure()
-                plt.hist(norm_by_T[t])
-                plt.savefig(dist_output_dir / f"norm_dist__t={t}.png")
+                plt.figure(figsize=(5, 4))
+                plt.hist(norm_by_T[t], bins=20)
+                plt.xlabel("R")
+                plt.ylabel("Count")
+                plt.title(f"Norm distribution, q={Q}, L={L}, T={t}")
+                plt.savefig(dist_output_dir / f"norm_dist__t={t}.png", dpi=200)
             except:
                 pass
             rs.append(norm_by_T[t].mean().item())
 
             try:
-                plt.figure()
-                plt.hist(mag_by_T[t])
-                plt.savefig(dist_output_dir / f"mag_dist__t={t}.png")
+                plt.figure(figsize=(5, 4))
+                plt.hist(mag_by_T[t], bins=20)
+                plt.xlabel(r"$\langle m \rangle$")
+                plt.ylabel("Count")
+                plt.title(f"Magnetization distribution, q={Q}, L={L}, T={t}")
+                plt.savefig(dist_output_dir / f"mag_dist__t={t}.png", dpi=200)
             except:
                 pass
             ms.append(mag_by_T[t].mean().item())
 
             plt.close("all")
 
-        plt.figure()
+        plt.figure(figsize=(5, 4))
         plt.plot(ts, rs)
         plt.xlabel("T")
         plt.ylabel("R")
-        plt.savefig(output_dir / f"norm_mean.png")
+        plt.savefig(output_dir / f"norm_mean.png", dpi=200)
 
-        plt.figure()
+        all_norm_means[Q, L] = (ts, rs)
+
+        plt.figure(figsize=(5, 4))
         plt.plot(ts, ms)
         plt.xlabel("")
-        plt.savefig(output_dir / f"mag_mean.png")
+        plt.savefig(output_dir / f"mag_mean.png", dpi=200)
 
         plt.close("all")
 
 for q in [2, 3, 4]:
-    plt.figure()
+    plt.figure(figsize=(5, 4))
     for (Q, L), train_losses in all_train_losses.items():
         if Q != q:
             continue
@@ -152,4 +161,19 @@ for q in [2, 3, 4]:
     plt.ylabel("Train Loss")
     plt.title(f"Training Curve, q={q}")
     plt.legend()
-    plt.savefig(output_root / f"training_curve__q={q}.png")
+    plt.savefig(output_root / f"training_curve__q={q}.png", dpi=200)
+
+Tc_values = {2: 1.134, 3: 0.995, 4: 0.910}
+
+for q in [2, 3, 4]:
+    plt.figure(figsize=(5, 4))
+    for (Q, L), (T, R) in all_norm_means.items():
+        if Q != q:
+            continue
+        plt.plot(T, R, label=f"q={Q}, L={L}")
+    plt.xlabel("T")
+    plt.ylabel("R")
+    plt.axvline(Tc_values[q], color='black', linestyle=':', label=f"Tc={Tc_values[q]:.3f}")
+    plt.title(f"R, q={q}")
+    plt.legend()
+    plt.savefig(output_root / f"norm_mean__q={q}.png", dpi=200)
