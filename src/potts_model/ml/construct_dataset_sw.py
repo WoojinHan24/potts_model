@@ -35,7 +35,7 @@ def ferro_J(s1, s2, J0=1.0):
     return np.where(s1 == s2, -J0, 0.0)
 
 
-def run(seed, output_root, q, L, T, thermalization_iters, num_samples, iter_per_sample, energy_log_period):
+def run(seed, output_root, q, L, T, thermalization_iters, num_samples, iter_per_sample, energy_log_period, optimize = True):
     logging.info(f"Start generating dataset for q={q}, L={L}, T={T}")
     logging.info(f"Total iters: {thermalization_iters + num_samples * iter_per_sample}")
     I = list(range(L * L))
@@ -55,10 +55,19 @@ def run(seed, output_root, q, L, T, thermalization_iters, num_samples, iter_per_
         neighbors=neighbors,
         interaction=ferro_J,
     )[0]
-    samples, energy_log = run_swendsen_wang(model, T, thermalization_iters, num_samples, iter_per_sample, energy_log_period)
+    samples, energy_log = run_swendsen_wang(model, T, thermalization_iters, num_samples, iter_per_sample, energy_log_period, optimize=optimize)
     
-    output_path = output_dir / f"t={T}.npz"
-    np.savez_compressed(output_path, allow_pickle=False, samples=np.stack(samples, axis=0), energy_log=energy_log)
+    if optimize:
+        output_path = output_dir / f"t={T}.npz"
+        np.savez_compressed(output_path, allow_pickle=False, samples=np.stack(samples, axis=0), energy_log=energy_log)
+    else:
+        output_path = output_dir / f"t={T}.pkl"
+        import pickle
+        with output_path.open("wb") as f:
+            pickle.dump({
+                "samples": np.stack(samples, axis=0),
+                "energy_log": energy_log,
+            }, f)
 
     logging.info(f"Done! Generated dataset to {str(output_path)}")
 
