@@ -157,8 +157,8 @@ def plot_finite_size_effects(q: int, L_values: list[int], out_root: Path = Path(
     plt.savefig(out_root / f"finite_size_comparison_q{q}.png", dpi=200)
     plt.close()
 
-Q_range = [3, 4, 5]
-L_range = [10, 20, 30, 40]
+Q_range = [2, 3, 4, 5]
+L_range = [10, 20, 30, 40, 50]
 
 def main() -> None:
     for q in Q_range:
