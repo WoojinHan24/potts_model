@@ -1,6 +1,6 @@
 import numpy as np
 import itertools
-from logging import info
+from logging import info, debug
 
 
 def run_TRG_square_lattice(q, J_fn, J0, beta, N_keep, iteration):
@@ -13,8 +13,8 @@ def run_TRG_square_lattice(q, J_fn, J0, beta, N_keep, iteration):
         info(f"iteration {i+1} started for TRG")
         result_1 = get_T(A, N_keep)
         result_2 = get_T(A.transpose(1, 0, 2, 3), N_keep)
-        info(f"T granted, top 5 S_spectrum --- \n {result_1.S_spectrum[:5]}")
-        info(f"T tilde granted, top 5 S_spectrum --- \n {result_2.S_spectrum[:5]}")
+        debug(f"T granted, top 5 S_spectrum --- \n {result_1.S_spectrum[:5]}")
+        debug(f"T tilde granted, top 5 S_spectrum --- \n {result_2.S_spectrum[:5]}")
         T1 = result_1.T
         T3 = result_1.Td
         T2 = result_2.T

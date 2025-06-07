@@ -114,7 +114,7 @@ def periodic_neighbors(Lx, Ly):
 
 
 def ferro_J(s1, s2, q, J0=1.0):
-    return np.where(s1 == s2, J0 / 2, 0.0)
+    return np.where(s1 == s2, -J0, 0.0)
 
 
 def clock_J(s1, s2, q, J0=1.0):
