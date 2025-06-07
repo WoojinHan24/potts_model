@@ -37,3 +37,4 @@ from = "src"
 
 [tool.poetry.scripts]
 dev = "potts_model.dev:main"
+square_trg = "potts_model.rg.run_square_trg:main"

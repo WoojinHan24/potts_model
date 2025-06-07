@@ -15,8 +15,7 @@ class GridPotts(PottsModel):
     ):
 
         # TODO Maybe make this part contains, Nx Ny, ...
-        super.__init__(
-            self,
+        super().__init__(
             q,
             index_set,
             index_to_position_map,
